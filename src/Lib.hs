@@ -24,12 +24,12 @@ data JValue
 jsonScheme :: Parser JValue
 jsonScheme =
   choice
-    [ jsonNull,
-      jsonBool,
-      jsonNumber,
-      jsonString,
-      jsonArray,
-      jsonObject
+    [ jsonNull
+    , jsonBool
+    , jsonNumber
+    , jsonString
+    , jsonArray
+    , jsonObject
     ]
 
 jsonNull :: Parser JValue
