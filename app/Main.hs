@@ -1,7 +1,8 @@
 module Main (main) where
 
-import Lib
 import Text.Megaparsec
+
+import Lib
 
 main :: IO ()
 main = do
