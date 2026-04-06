@@ -21,7 +21,25 @@ data JValue
   | JString String
   | JArray [JValue]
   | JObject [(String, JValue)]
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show JValue where
+  show = go 0
+   where
+    go :: Int -> JValue -> String
+    go depth j = case j of
+      JNull -> "null"
+      JBool True -> "true"
+      JBool False -> "false"
+      JInt i -> show i
+      JDouble d -> show d
+      JString s -> show s
+      JArray a -> "[\n" <> L.intercalate ",\n" (map (\x -> indent <> go (depth + 1) x) a) <> "\n" <> closeBrace <> "]"
+      JObject o -> "{\n" <> L.intercalate ",\n" (map field o) <> "\n" <> closeBrace <> "}"
+     where
+      indent = replicate ((depth + 1) * 2) ' '
+      closeBrace = replicate (depth * 2) ' '
+      field (k, v) = indent <> show k <> ": " <> go (depth + 1) v
 
 jnull :: Parser JValue
 jnull = do
