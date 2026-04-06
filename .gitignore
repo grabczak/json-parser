@@ -1,2 +1,5 @@
 .stack-work/
 *~
+
+# macOS
+.DS_Store
