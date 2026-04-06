@@ -17,5 +17,5 @@ main = do
       putStrLn "Parsed JSON:"
       putStrLn $ show jvalue
       putStrLn ""
-      putStrLn "Re-encoded JSON:"
+      putStrLn "Serialized JSON:"
       putStrLn $ toJSON jvalue
