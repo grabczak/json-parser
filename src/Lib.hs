@@ -35,12 +35,12 @@ jbool = do
 
 jint :: Parser JValue
 jint = do
-  i <- decimal
+  i <- signed (return ()) decimal
   return $ JInt i
 
 jdouble :: Parser JValue
 jdouble = do
-  d <- float
+  d <- signed (return ()) float
   return $ JDouble d
 
 jnumber :: Parser JValue
