@@ -18,11 +18,9 @@ For testing, run:
 $ stack test
 ```
 
-## Known issues
+## Disclaimer
 
-- No support for extra spaces, newlines etc
-- Parses integers as floats
-- May fail on some edge cases
+This is not production ready code. It may fail on some edge cases.
 
 ## License
 
