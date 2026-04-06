@@ -109,8 +109,14 @@ jvalue = do
   _ <- space
   return v
 
+json :: Parser JValue
+json = do
+  j <- jvalue
+  eof
+  return j
+
 fromJSON :: String -> Either (ParseErrorBundle Input Error) JValue
-fromJSON input = parse (jvalue <* eof) "" (T.pack input)
+fromJSON input = parse json "" (T.pack input)
 
 toJSON :: JValue -> String
 toJSON j = case j of

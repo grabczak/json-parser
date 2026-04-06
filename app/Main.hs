@@ -5,15 +5,17 @@ import Text.Megaparsec
 
 main :: IO ()
 main = do
-  putStrLn "Path to JSON file:"
-  let path = "./example.json"
+  putStr "Path to JSON: "
+  path <- getLine
   contents <- readFile path
-  putStrLn "File contents:"
-  putStrLn contents
+  putStrLn ""
   case fromJSON contents of
-    Left err -> putStrLn $ errorBundlePretty err
+    Left err -> do
+      putStrLn "Parse failed:"
+      putStrLn $ errorBundlePretty err
     Right jvalue -> do
-      putStrLn "Parsed JSON value:"
+      putStrLn "Parsed JSON:"
       putStrLn $ show jvalue
-      putStrLn "Back to JSON:"
+      putStrLn ""
+      putStrLn "Re-encoded JSON:"
       putStrLn $ toJSON jvalue
