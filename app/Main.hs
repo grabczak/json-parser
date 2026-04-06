@@ -1,19 +1,17 @@
 module Main (main) where
 
-import Lib (fromJSON, toJSON)
-import Text.Megaparsec (errorBundlePretty)
+import Lib
+import Text.Megaparsec
 
 main :: IO ()
 main = do
-  print "Path to JSON file:"
-  path <- getLine
+  putStrLn "Path to JSON file:"
+  let path = "./example.json"
   contents <- readFile path
-  print "File contents:"
-  print contents
+  putStrLn "File contents:"
+  putStrLn contents
   case fromJSON contents of
-    Left err -> print $ "Error parsing JSON: " ++ errorBundlePretty err
+    Left err -> putStrLn $ errorBundlePretty err
     Right jvalue -> do
-      print "Parsed JSON value:"
-      print jvalue
-      print "Stringified back to JSON:"
-      print $ toJSON jvalue
+      putStrLn "Parsed JSON value:"
+      putStrLn $ show jvalue

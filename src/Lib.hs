@@ -2,93 +2,104 @@
 
 module Lib (JValue (..), fromJSON, toJSON) where
 
-import Data.List (intercalate)
-import Data.Scientific (Scientific)
-import Data.Text (Text, pack)
-import Data.Void (Void)
-import Text.Megaparsec (MonadParsec (eof), ParseErrorBundle, Parsec, choice, manyTill, parse, sepBy)
-import Text.Megaparsec.Char (char, string)
-import Text.Megaparsec.Char.Lexer (charLiteral, scientific, signed)
+import Data.List
+import qualified Data.Text as T
+import Data.Void
+import Text.Megaparsec
+import Text.Megaparsec.Char
+import Text.Megaparsec.Char.Lexer hiding (space)
 
-type Parser = Parsec Void Text
+type Error = Void
+type Input = T.Text
+type Parser = Parsec Error Input
 
 data JValue
   = JNull
   | JBool Bool
-  | JNumber Scientific
+  | JInt Integer
+  | JDouble Double
   | JString String
   | JArray [JValue]
   | JObject [(String, JValue)]
   deriving (Eq, Show)
 
-jsonScheme :: Parser JValue
-jsonScheme =
-  choice
-    [ jsonNull
-    , jsonBool
-    , jsonNumber
-    , jsonString
-    , jsonArray
-    , jsonObject
-    ]
-
-jsonNull :: Parser JValue
-jsonNull = do
+jnull :: Parser JValue
+jnull = do
   _ <- string "null"
-  pure JNull
+  return JNull
 
-jsonBool :: Parser JValue
-jsonBool = do
+jbool :: Parser JValue
+jbool = do
   b <- choice [string "true", string "false"]
-  pure $ JBool (b == "true")
+  return $ JBool $ b == "true"
 
-jsonNumber :: Parser JValue
-jsonNumber = do
-  n <- signed (pure ()) scientific
-  pure $ JNumber n
+jint :: Parser JValue
+jint = do
+  i <- decimal
+  return $ JInt i
 
-jsonString :: Parser JValue
-jsonString = do
+jdouble :: Parser JValue
+jdouble = do
+  d <- float
+  return $ JDouble d
+
+jnumber :: Parser JValue
+jnumber = try jdouble <|> jint
+
+jstring :: Parser JValue
+jstring = do
   _ <- char '"'
-  content <- manyTill charLiteral (char '"')
-  pure $ JString content
+  s <- manyTill charLiteral $ char '"'
+  return $ JString s
 
-jsonArray :: Parser JValue
-jsonArray = do
+jarray :: Parser JValue
+jarray = do
   _ <- char '['
-  values <- jsonScheme `sepBy` char ','
+  a <- jvalue `sepBy` (char ',' >> space)
   _ <- char ']'
-  pure $ JArray values
+  return $ JArray a
 
-jsonPair :: Parser (String, JValue)
-jsonPair = do
-  (JString key) <- jsonString
+jpair :: Parser (String, JValue)
+jpair = do
+  _ <- space
+  (JString k) <- jstring
+  _ <- space
   _ <- char ':'
-  value <- jsonScheme
-  pure (key, value)
+  v <- jvalue
+  return (k, v)
 
-jsonObject :: Parser JValue
-jsonObject = do
+jobject :: Parser JValue
+jobject = do
   _ <- char '{'
-  pairs <- jsonPair `sepBy` char ','
+  _ <- space
+  p <- jpair `sepBy` (char ',')
   _ <- char '}'
-  pure $ JObject pairs
+  return $ JObject p
 
-jsonValue :: Parser JValue
-jsonValue = do
-  value <- jsonScheme
-  eof
-  pure value
+jvalue :: Parser JValue
+jvalue = do
+  _ <- space
+  v <-
+    choice
+      [ jnull
+      , jbool
+      , jnumber
+      , jstring
+      , jarray
+      , jobject
+      ]
+  _ <- space
+  return v
 
-fromJSON :: String -> Either (ParseErrorBundle Text Void) JValue
-fromJSON input = parse jsonValue "" (pack input)
+fromJSON :: String -> Either (ParseErrorBundle Input Error) JValue
+fromJSON input = parse jvalue "" (T.pack input)
 
 toJSON :: JValue -> String
-toJSON input = case input of
+toJSON j = case j of
   JNull -> "null"
-  JBool True -> "true"
-  JBool False -> "false"
-  JNumber n -> show n
-  JString s -> "\"" ++ s ++ "\""
-  JArray arr -> "[" ++ intercalate "," (map toJSON arr) ++ "]"
-  JObject obj -> "{" ++ intercalate "," (map (\(k, v) -> "\"" ++ k ++ "\":" ++ toJSON v) obj) ++ "}"
+  JBool b -> show b
+  JInt i -> show i
+  JDouble d -> show d
+  JString s -> s
+  JArray a -> intercalate "," $ map toJSON a
+  JObject o -> intercalate "," $ map (\(k, v) -> k ++ ":" ++ toJSON v) o

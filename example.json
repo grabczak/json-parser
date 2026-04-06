@@ -1,1 +1,8 @@
-{"null":null,"boolean":true,"number":256.0,"string":"This is a string","array":[1.0,2.0,3.0],"object":{"key":"value"}}
+{
+  "null": null,
+  "boolean": true,
+  "number": 256,
+  "string": "This is a string",
+  "array": [1e-10, 2, 3.0],
+  "object": { "key": "value" }
+}

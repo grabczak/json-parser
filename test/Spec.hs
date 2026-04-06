@@ -1,6 +1,5 @@
 module Main (main) where
 
-import Data.Scientific (Scientific, fromFloatDigits)
 import Lib (JValue (..), fromJSON, toJSON)
 import Test.Framework (Test, defaultMain, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
@@ -42,19 +41,19 @@ testFalse :: Assertion
 testFalse = assertParseSuccess "false" (JBool False)
 
 testNumber :: Assertion
-testNumber = assertParseSuccess "123.45" (JNumber (fromFloatDigits (123.45 :: Double)))
+testNumber = assertParseSuccess "123.45" (JDouble 123.45)
 
 testString :: Assertion
 testString = assertParseSuccess "\"hello\"" (JString "hello")
 
 testArray :: Assertion
-testArray = assertParseSuccess "[null,true,1]" (JArray [JNull, JBool True, JNumber 1])
+testArray = assertParseSuccess "[null,true,1]" (JArray [JNull, JBool True, JInt 1])
 
 testObject :: Assertion
 testObject = assertParseSuccess "{\"a\":null,\"b\":false}" (JObject [("a", JNull), ("b", JBool False)])
 
 testNegativeNumber :: Assertion
-testNegativeNumber = assertParseSuccess "-21" (JNumber (fromFloatDigits (-21 :: Double)))
+testNegativeNumber = assertParseSuccess "-21" (JInt (-21))
 
 testEmptyString :: Assertion
 testEmptyString = assertParseSuccess "\"\"" (JString "")
@@ -86,18 +85,18 @@ testGeneralCase =
         , JObject [("object with 1 member", JArray [JString "array with 1 element"])]
         , JObject []
         , JArray []
-        , JNumber (-42)
+        , JInt (-42)
         , JBool True
         , JBool False
         , JNull
         , JObject
-            [ ("integer", JNumber 1234567890)
-            , ("real", JNumber (fromFloatDigits (-9876.54321 :: Double)))
-            , ("e", JNumber (fromFloatDigits (1.23456789e-13 :: Double)))
-            , ("E", JNumber (fromFloatDigits (1.23456789e+34 :: Double)))
-            , ("", JNumber (fromFloatDigits (2.3456789012e+76 :: Double)))
-            , ("zero", JNumber 0)
-            , ("one", JNumber 1)
+            [ ("integer", JInt 1234567890)
+            , ("real", JDouble (-9876.54321))
+            , ("e", JDouble (1.23456789e-13))
+            , ("E", JDouble (1.23456789e+34))
+            , ("", JDouble (2.3456789012e+76))
+            , ("zero", JInt 0)
+            , ("one", JInt 1)
             , ("space", JString " ")
             , ("quote", JString "\"")
             , ("backslash", JString "\\")
@@ -118,22 +117,22 @@ testGeneralCase =
             , ("url", JString "http://www.JSON.org/")
             , ("comment", JString "// /* <!-- --")
             , ("# -- --> */", JString " ")
-            , (" s p a c e d ", JArray (map JNumber [1, 2, 3, 4, 5, 6, 7]))
-            , ("compact", JArray (map JNumber [1, 2, 3, 4, 5, 6, 7]))
+            , (" s p a c e d ", JArray (map JInt [1, 2, 3, 4, 5, 6, 7]))
+            , ("compact", JArray (map JInt [1, 2, 3, 4, 5, 6, 7]))
             , ("jsontext", JString "{\"object with 1 member\":[\"array with 1 element\"]}")
             , ("quotes", JString "&#34; \" %22 0x22 034 &#x22;")
             , ("/\\\"쫾몾ꮘﳞ볚屴\b\f\n\r\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?", JString "A key can be any string")
             ]
-        , JNumber (fromFloatDigits (0.5 :: Double))
-        , JNumber (fromFloatDigits (98.6 :: Double))
-        , JNumber (fromFloatDigits (99.44 :: Double))
-        , JNumber 1066
-        , JNumber 10
-        , JNumber 1
-        , JNumber (fromFloatDigits (0.1 :: Double))
-        , JNumber 1
-        , JNumber 2
-        , JNumber 2
+        , JDouble 0.5
+        , JDouble 98.6
+        , JDouble 99.44
+        , JInt 1066
+        , JInt 10
+        , JInt 1
+        , JDouble 0.1
+        , JInt 1
+        , JInt 2
+        , JInt 2
         , JString "rosebud"
         ]
     )
@@ -278,12 +277,13 @@ instance Arbitrary ArbJValue where
 
 arbJValue :: Int -> Gen JValue
 arbJValue n
-  | n <= 0 = oneof [pure JNull, JBool <$> arbitrary, JNumber <$> arbitraryScientific, JString <$> arbitraryString]
+  | n <= 0 = oneof [pure JNull, JBool <$> arbitrary, JInt <$> arbitrary, JDouble <$> arbitrary, JString <$> arbitraryString]
   | otherwise =
       oneof
         [ pure JNull
         , JBool <$> arbitrary
-        , JNumber <$> arbitraryScientific
+        , JInt <$> arbitrary
+        , JDouble <$> arbitrary
         , JString <$> arbitraryString
         , JArray <$> resize (n `div` 2) (listOf (arbJValue (n `div` 2)))
         , JObject <$> resize (n `div` 2) (listOf ((,) <$> arbitraryString <*> arbJValue (n `div` 2)))
@@ -291,9 +291,6 @@ arbJValue n
 
 arbitraryString :: Gen String
 arbitraryString = listOf $ elements (['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9'] ++ " -_")
-
-arbitraryScientific :: Gen Scientific
-arbitraryScientific = fromFloatDigits <$> (arbitrary :: Gen Double)
 
 propertyIdentity :: ArbJValue -> Property
 propertyIdentity (ArbJValue v) =
