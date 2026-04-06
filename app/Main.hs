@@ -5,7 +5,7 @@ import Text.Megaparsec
 
 main :: IO ()
 main = do
-  putStr "Path to JSON: "
+  putStrLn "Path to JSON: "
   path <- getLine
   contents <- readFile path
   putStrLn ""
