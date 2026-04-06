@@ -2,7 +2,7 @@
 
 module Lib (JValue (..), fromJSON, toJSON) where
 
-import Data.List
+import qualified Data.List as L
 import qualified Data.Text as T
 import Data.Void
 import Text.Megaparsec
@@ -92,14 +92,15 @@ jvalue = do
   return v
 
 fromJSON :: String -> Either (ParseErrorBundle Input Error) JValue
-fromJSON input = parse jvalue "" (T.pack input)
+fromJSON input = parse (jvalue <* eof) "" (T.pack input)
 
 toJSON :: JValue -> String
 toJSON j = case j of
   JNull -> "null"
-  JBool b -> show b
+  JBool True -> "true"
+  JBool False -> "false"
   JInt i -> show i
   JDouble d -> show d
-  JString s -> s
-  JArray a -> intercalate "," $ map toJSON a
-  JObject o -> intercalate "," $ map (\(k, v) -> k ++ ":" ++ toJSON v) o
+  JString s -> "\"" <> s <> "\""
+  JArray a -> "[" <> (L.intercalate "," $ map toJSON a) <> "]"
+  JObject o -> "{" <> (L.intercalate "," $ map (\(k, v) -> "\"" <> k <> "\"" <> ":" <> toJSON v) o) <> "}"

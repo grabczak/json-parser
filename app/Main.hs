@@ -15,3 +15,5 @@ main = do
     Right jvalue -> do
       putStrLn "Parsed JSON value:"
       putStrLn $ show jvalue
+      putStrLn "Back to JSON:"
+      putStrLn $ toJSON jvalue
