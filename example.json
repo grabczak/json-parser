@@ -1,8 +1,9 @@
 {
   "null": null,
   "boolean": true,
-  "number": 256,
-  "string": "This is a string",
-  "array": [1e-10, 2, 3.0],
+  "int": 1,
+  "double": 44.0,
+  "string": "This statement is false",
+  "array": [null, false, -1, -4.4e-9],
   "object": { "key": "value" }
 }
